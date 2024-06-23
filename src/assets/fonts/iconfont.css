@@ -1,0 +1,283 @@
+@font-face {
+  font-family: "trs-lowcode"; /* Project id 3844874 */
+  src: url('iconfont.woff2?t=1686819270430') format('woff2'),
+       url('iconfont.woff?t=1686819270430') format('woff'),
+       url('iconfont.ttf?t=1686819270430') format('truetype');
+}
+
+.trs-lowcode {
+  font-family: "trs-lowcode" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.lowcode-request:before {
+  content: "\e63e";
+}
+
+.lowcode-edit-nopub:before {
+  content: "\e689";
+}
+
+.lowcode-video-doc:before {
+  content: "\e638";
+}
+
+.lowcode-restore:before {
+  content: "\e639";
+}
+
+.lowcode-reject:before {
+  content: "\e63a";
+}
+
+.lowcode-audit:before {
+  content: "\e63b";
+}
+
+.lowcode-img-doc:before {
+  content: "\e63c";
+}
+
+.lowcode-clear:before {
+  content: "\e63d";
+}
+
+.lowcode-copy:before {
+  content: "\e64d";
+}
+
+.lowcode-light:before {
+  content: "\e636";
+}
+
+.lowcode-dark:before {
+  content: "\e637";
+}
+
+.lowcode-transform:before {
+  content: "\e635";
+}
+
+.lowcode-more-vertical:before {
+  content: "\e634";
+}
+
+.lowcode-video:before {
+  content: "\e631";
+}
+
+.lowcode-img:before {
+  content: "\e632";
+}
+
+.lowcode-audio:before {
+  content: "\e633";
+}
+
+.lowcode-closeL:before {
+  content: "\e630";
+}
+
+.lowcode-doc:before {
+  content: "\e600";
+}
+
+.lowcode-js:before {
+  content: "\e601";
+}
+
+.lowcode-pdf:before {
+  content: "\e603";
+}
+
+.lowcode-android:before {
+  content: "\e629";
+}
+
+.lowcode-txt:before {
+  content: "\e62a";
+}
+
+.lowcode-unknown:before {
+  content: "\e62b";
+}
+
+.lowcode-ppt:before {
+  content: "\e62c";
+}
+
+.lowcode-xls:before {
+  content: "\e62d";
+}
+
+.lowcode-css:before {
+  content: "\e62e";
+}
+
+.lowcode-json:before {
+  content: "\e62f";
+}
+
+.lowcode-spin:before {
+  content: "\e606";
+}
+
+.lowcode-setting:before {
+  content: "\e626";
+}
+
+.lowcode-super-prev:before {
+  content: "\e605";
+}
+
+.lowcode-calender:before {
+  content: "\e623";
+}
+
+.lowcode-super-next:before {
+  content: "\e625";
+}
+
+.lowcode-loading:before {
+  content: "\e604";
+}
+
+.lowcode-close-circle:before {
+  content: "\e67a";
+}
+
+.lowcode-close:before {
+  content: "\e621";
+}
+
+.lowcode-arrow-up:before {
+  content: "\e622";
+}
+
+.lowcode-arrow-right:before {
+  content: "\e67b";
+}
+
+.lowcode-info1:before {
+  content: "\e624";
+}
+
+.lowcode-lock:before {
+  content: "\e628";
+}
+
+.lowcode-unlock:before {
+  content: "\e602";
+}
+
+.lowcode-clock:before {
+  content: "\e61f";
+}
+
+.lowcode-read:before {
+  content: "\e620";
+}
+
+.lowcode-fix:before {
+  content: "\e61d";
+}
+
+.lowcode-magnify:before {
+  content: "\e627";
+}
+
+.lowcode-top-round:before {
+  content: "\e61e";
+}
+
+.lowcode-drag:before {
+  content: "\e608";
+}
+
+.lowcode-allow:before {
+  content: "\e611";
+}
+
+.lowcode-delete:before {
+  content: "\e612";
+}
+
+.lowcode-forbid:before {
+  content: "\e613";
+}
+
+.lowcode-comment:before {
+  content: "\e614";
+}
+
+.lowcode-top:before {
+  content: "\e615";
+}
+
+.lowcode-unpublish:before {
+  content: "\e616";
+}
+
+.lowcode-publish:before {
+  content: "\e617";
+}
+
+.lowcode-no-top:before {
+  content: "\e618";
+}
+
+.lowcode-more:before {
+  content: "\e619";
+}
+
+.lowcode-no-comment:before {
+  content: "\e61a";
+}
+
+.lowcode-no-pass:before {
+  content: "\e61b";
+}
+
+.lowcode-pass:before {
+  content: "\e61c";
+}
+
+.lowcode-add:before {
+  content: "\e60f";
+}
+
+.lowcode-sort:before {
+  content: "\e610";
+}
+
+.lowcode-error:before {
+  content: "\e60c";
+}
+
+.lowcode-info:before {
+  content: "\e60d";
+}
+
+.lowcode-success:before {
+  content: "\e60e";
+}
+
+.lowcode-arrow:before {
+  content: "\e60b";
+}
+
+.lowcode-search:before {
+  content: "\e60a";
+}
+
+.lowcode-sort-right:before {
+  content: "\e609";
+}
+
+.lowcode-sort-left:before {
+  content: "\e607";
+}
+

@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "Vue.volar",
+    "streetsidesoftware.code-spell-checker",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "eamodio.gitlens",
+    "christian-kohler.path-intellisense"
+  ]
+}

@@ -1,0 +1,40 @@
+@import './reset.less';
+@import './variables.less';
+
+/* 公共属性样式*/
+.fr {
+  float: right;
+}
+.fl {
+  float: left;
+}
+
+/* 清除浮动 */
+.clearfix::after {
+  content: ' ';
+  display: block;
+  height: 0;
+  clear: both;
+  font-size: 0;
+  visibility: hidden;
+}
+
+/* 全局样式 */
+body {
+  color: @textBase;
+  font-size: @fontSizeBase;
+  overflow: auto;
+}
+
+/* 文字溢出 */
+.overflow {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 公共布局样式*/
+
+.main-container {
+  height: 100%;
+}
