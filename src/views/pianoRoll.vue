@@ -1,5 +1,5 @@
 <template>
-  <div class="midi-scroll">
+  <div class="piano-roll">
     <div class="keyboard">
       <template
         v-for="range in ALLRANGES"
@@ -21,6 +21,22 @@
       ref="tracks"
       class="tracks"
     >
+      <template
+        v-for="range in ALLRANGES"
+        :key="range"
+      >
+        <div
+          v-for="pitch in ALLPITCHES"
+          :key="String(range) + String(pitch)"
+          class="pitch"
+          :class="[isBlackKey(pitch) ? 'black-key' : 'white-key']"
+          :style="{ width: `${beatWidth * 4 * barNumber}px` }"
+          :pitch="pitch"
+          :range="range"
+          @click="onAddNote"
+        ></div>
+      </template>
+
       <div class="beats">
         <div
           v-for="bar in barNumber"
@@ -37,28 +53,16 @@
           ></div>
         </div>
       </div>
-      <template
-        v-for="range in ALLRANGES"
-        :key="range"
-      >
-        <div
-          v-for="pitch in ALLPITCHES"
-          :key="String(range) + String(pitch)"
-          class="pitch"
-          :class="[isBlackKey(pitch) ? 'black-key' : 'white-key']"
-          :style="{ width: `${beatWidth * 4 * barNumber}px` }"
-          :pitch="pitch"
-          :range="range"
-          @click="onAddNote"
-        >
-          <note-component
-            v-for="note in getNotesByPitch(notes, pitch, range)"
-            :key="note.id"
-            :note="note"
-            :beat-width="beatWidth"
-          ></note-component>
-        </div>
-      </template>
+
+      <note-component
+        v-for="note in notes"
+        :key="note.id"
+        :note="note"
+        :beat-width="beatWidth"
+        :pitch-height="pitchHeight"
+        @delete="onDeleteNote"
+        @width-change="onWidthChange"
+      ></note-component>
     </div>
   </div>
 </template>
@@ -68,42 +72,66 @@ import { ref, onMounted } from 'vue'
 import type { Pitch, Range } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
 import { ALLPITCHES, ALLRANGES, isBlackKey } from '@/utils/constants'
-import { Note, getNotesByPitch } from '@/utils/note'
-import { Position } from '@/utils/position'
+import { Note } from '@/utils/note'
+import { Position, getBeatByOffset } from '@/utils/position'
 
 const notes = ref<Note[]>([])
 
 const barNumber = ref(0)
 const beatWidth = ref(24)
+const pitchHeight = ref(24)
 
 const tracks = ref<HTMLDivElement>()
 
-// get init bar number
 onMounted(() => {
+  // get init bar number
   barNumber.value = Math.round(tracks.value!.clientWidth / beatWidth.value / 4)
+
+  // scroll to C3
+  document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][range="3"]')?.scrollIntoView({ block: 'center' })
 })
 
-const currentNoteLength = 4
+let currentNoteLength = 4
 
 // add note
 const onAddNote = (e: MouseEvent) => {
   const pitch = (e.target as HTMLElement).getAttribute('pitch') as Pitch
   const range = Number((e.target as HTMLElement).getAttribute('range')) as Range
-  const startPosition = new Position(Math.floor(e.offsetX / beatWidth.value))
-  const endPosition = startPosition.getPositionAfterBeats(currentNoteLength)
+  const startPosition = new Position(getBeatByOffset(e.offsetX, beatWidth.value))
 
-  notes.value.push(new Note(startPosition, endPosition, pitch, range))
+  notes.value.push(
+    new Note({
+      start: startPosition,
+      width: currentNoteLength,
+      pitch,
+      range
+    })
+  )
+}
+
+const onDeleteNote = (note: Note) => {
+  notes.value = notes.value.filter(item => item.id !== note.id)
+}
+
+const onWidthChange = (noteWidth: number) => {
+  currentNoteLength = noteWidth
 }
 
 // TODO: zoom
 
 // TODO: play
 
-// TODO: auto complete
+// TODO: keyboard play
+
+// TODO: import and export
+
+// TODO: chord auto complete
+
+// TODO: melody auto complete
 </script>
 
 <style lang="less" scoped>
-.midi-scroll {
+.piano-roll {
   display: flex;
   width: 100%;
   height: 100%;
@@ -114,7 +142,6 @@ const onAddNote = (e: MouseEvent) => {
     line-height: 24px;
     text-align: right;
     border: 1px solid @borderMedium;
-    cursor: pointer;
     user-select: none;
 
     &:not(:first-child) {
@@ -153,6 +180,13 @@ const onAddNote = (e: MouseEvent) => {
       position: relative;
       border-left: none;
       border-right: none;
+
+      &.white-key {
+        background: @bgWhite;
+      }
+      &.black-key {
+        background: @bgGray;
+      }
     }
 
     .beats {

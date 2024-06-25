@@ -1,23 +1,42 @@
 import type { Pitch, Range } from './constants'
 import type { Position } from './position'
 
-export class Note {
+export interface NoteAttribute {
+  start: Position
+  width: number
+  pitch: Pitch
+  range: Range
+}
+
+export class Note implements NoteAttribute {
   public start: Position
-  public end: Position
+  public width: number
   public pitch: Pitch
   public range: Range
   public readonly id: number
 
-  constructor(start: Position, end: Position, pitch: Pitch, range: Range) {
+  constructor(params: NoteAttribute) {
+    const { start, width, pitch, range } = params
     this.start = start
-    this.end = end
+    this.width = width
     this.pitch = pitch
     this.range = range
     this.id = Date.now()
   }
 
-  getWidth() {
-    return this.end.beat - this.start.beat
+  update(newNote: Partial<NoteAttribute>) {
+    if (newNote.width) {
+      this.width = newNote.width
+    }
+    if (newNote.start) {
+      this.start = newNote.start
+    }
+    if (newNote.pitch) {
+      this.pitch = newNote.pitch
+    }
+    if (newNote.range) {
+      this.range = newNote.range
+    }
   }
 }
 

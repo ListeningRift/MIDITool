@@ -21,3 +21,7 @@ export class Position {
     return new Position(this.beat + beat)
   }
 }
+
+export function getBeatByOffset(offset: number, beatWidth: number) {
+  return Math.max(0, Math.floor(offset / beatWidth))
+}
