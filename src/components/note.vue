@@ -3,11 +3,11 @@
     ref="noteRef"
     class="note"
     :style="{ width: `${width}px`, height: `${props.pitchHeight}px`, top: `${top}px`, left: `${left}px`, 'z-index': props.note.start.beat }"
-    :note="`${props.note.pitch}${props.note.range}`"
+    :note="props.note.getPitchRange()"
     @click.stop
     @contextmenu.stop.prevent="onDelete"
   >
-    {{ props.note.pitch }}{{ props.note.range }}
+    {{ props.note.getPitchRange() }}
   </div>
 </template>
 

@@ -1,4 +1,6 @@
-import { PolySynth, Sampler, loaded } from 'tone'
+import { Sampler, loaded, getTransport } from 'tone'
+import { isDefined } from '@vueuse/core'
+import { Note } from './note'
 import type { PitchRange } from './constants'
 
 const sampleMap = {
@@ -35,21 +37,50 @@ const sampleMap = {
 }
 
 export class Synth {
-  private synth: Sampler | PolySynth
+  private synth: Sampler
+  public isLoaded = false
 
   constructor() {
-    // this.synth = new Sampler({
-    //   urls: sampleMap,
-    //   release: 10,
-    //   baseUrl: 'https://tonejs.github.io/audio/salamander/'
-    // })
-    this.synth = new PolySynth().toDestination()
-    // loaded().then(() => {
-    //   this.synth.triggerAttackRelease(['Eb4', 'G4', 'Bb4'], 4)
-    // })
+    this.synth = new Sampler({
+      urls: sampleMap,
+      release: 1,
+      baseUrl: 'https://tonejs.github.io/audio/salamander/'
+    }).toDestination()
+    loaded().then(() => {
+      this.isLoaded = true
+    })
   }
 
-  play(pitch: PitchRange, duration: string | number) {
-    this.synth.triggerAttackRelease(pitch, duration)
+  play(pitch: PitchRange | PitchRange[], duration: string | number | Record<string, number>, startTime?: string | number | Record<string, number>) {
+    this.synth.triggerAttackRelease(pitch, duration, startTime)
+  }
+
+  playBySeconds(pitch: PitchRange | PitchRange[], seconds: number, startTime?: number) {
+    this.play(pitch, seconds, startTime)
+  }
+
+  playByBeats(pitch: PitchRange | PitchRange[], beats: number, startTime?: number) {
+    this.play(
+      pitch,
+      {
+        '4n': beats
+      },
+      isDefined(startTime) ? { '4n': startTime } : undefined
+    )
+  }
+
+  playNotesByBeats(notes: Note[]) {
+    // const transport = getTransport()
+    notes.forEach(note => {
+      this.playByBeats(note.getPitchRange(), note.width, note.start.beat)
+    })
+  }
+
+  stop() {
+    this.synth.triggerRelease(0.1)
+  }
+
+  setBPM(bpm: number) {
+    getTransport().bpm.rampTo(bpm, 0.1)
   }
 }

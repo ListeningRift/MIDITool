@@ -1,4 +1,4 @@
-import type { Pitch, Range } from './constants'
+import type { Pitch, PitchRange, Range } from './constants'
 import type { Position } from './position'
 
 export interface NoteAttribute {
@@ -37,6 +37,10 @@ export class Note implements NoteAttribute {
     if (newNote.range) {
       this.range = newNote.range
     }
+  }
+
+  getPitchRange(): PitchRange {
+    return `${this.pitch}${this.range}`
   }
 }
 

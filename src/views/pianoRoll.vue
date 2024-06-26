@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import type { Pitch, PitchRange, Range } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
 import { ALL_PITCHES, ALL_RANGES, isBlackKey } from '@/utils/constants'
@@ -134,7 +134,7 @@ onMounted(() => {
   barNumber.value = Math.round(tracksRef.value!.clientWidth / beatWidth.value / 4) + 1
 
   // scroll to C3
-  document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][range="3"]')?.scrollIntoView({ block: 'center' })
+  document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][range="4"]')?.scrollIntoView({ block: 'center' })
 })
 
 let currentNoteLength = 4
@@ -164,11 +164,36 @@ const onWidthChange = (noteWidth: number) => {
 }
 
 // TODO: play
+const bpm = ref(120)
 const synth = new Synth()
 
+watchEffect(() => {
+  synth.setBPM(bpm.value)
+})
+
 const playNote = (note: PitchRange) => {
-  synth.play(note, 4)
+  synth.playByBeats(note, 1)
 }
+
+const isPlaying = ref(false)
+const play = () => {
+  if (!isPlaying.value) {
+    isPlaying.value = true
+    synth.playNotesByBeats(notes.value)
+  } else {
+    isPlaying.value = false
+    synth.stop()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keypress', e => {
+    if (e.key === ' ') {
+      play()
+      e.preventDefault()
+    }
+  })
+})
 
 // TODO: keyboard play
 
@@ -256,7 +281,7 @@ const playNote = (note: PitchRange) => {
 
         .beat {
           height: 100%;
-          border-right: 1px solid @borderLight;
+          border-right: 1px solid @borderBase;
           box-sizing: border-box;
 
           &:last-child {
