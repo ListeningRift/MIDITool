@@ -15,7 +15,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDraggable } from '@vueuse/core'
 import type { Note } from '@/utils/note'
-import { ALLPITCHES, ALLRANGES, type Pitch, type Range } from '@/utils/constants'
+import type { Pitch, Range } from '@/utils/constants'
+import { ALL_PITCHES, ALL_RANGES } from '@/utils/constants'
 import { Position, getBeatByOffset } from '@/utils/position'
 
 const props = defineProps<{
@@ -31,7 +32,7 @@ const emits = defineEmits<{
 
 const width = computed(() => props.note.width * props.beatWidth)
 const left = computed(() => props.note.start.beat * props.beatWidth)
-const top = computed(() => ((Math.max(...ALLRANGES) - props.note.range) * ALLPITCHES.length + ALLPITCHES.indexOf(props.note.pitch)) * props.pitchHeight)
+const top = computed(() => ((Math.max(...ALL_RANGES) - props.note.range) * ALL_PITCHES.length + ALL_PITCHES.indexOf(props.note.pitch)) * props.pitchHeight)
 
 const noteRef = ref<HTMLDivElement>()
 onMounted(() => {

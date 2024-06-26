@@ -1,15 +1,19 @@
 <template>
-  <div class="piano-roll">
+  <div
+    ref="pianoRollRef"
+    class="piano-roll"
+  >
     <div class="keyboard">
       <template
-        v-for="range in ALLRANGES"
+        v-for="range in ALL_RANGES"
         :key="range"
       >
         <div
-          v-for="pitch in ALLPITCHES"
+          v-for="pitch in ALL_PITCHES"
           :key="String(range) + String(pitch)"
           class="pitch"
           :class="[isBlackKey(pitch) ? 'black-key' : 'white-key']"
+          :style="{ height: `${pitchHeight}px` }"
           :pitch="pitch"
           :range="range"
         >
@@ -18,19 +22,19 @@
       </template>
     </div>
     <div
-      ref="tracks"
+      ref="tracksRef"
       class="tracks"
     >
       <template
-        v-for="range in ALLRANGES"
+        v-for="range in ALL_RANGES"
         :key="range"
       >
         <div
-          v-for="pitch in ALLPITCHES"
+          v-for="pitch in ALL_PITCHES"
           :key="String(range) + String(pitch)"
           class="pitch"
           :class="[isBlackKey(pitch) ? 'black-key' : 'white-key']"
-          :style="{ width: `${beatWidth * 4 * barNumber}px` }"
+          :style="{ width: `${beatWidth * 4 * barNumber}px`, height: `${pitchHeight}px` }"
           :pitch="pitch"
           :range="range"
           @click="onAddNote"
@@ -68,24 +72,64 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { Pitch, Range } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
-import { ALLPITCHES, ALLRANGES, isBlackKey } from '@/utils/constants'
+import { ALL_PITCHES, ALL_RANGES, isBlackKey } from '@/utils/constants'
 import { Note } from '@/utils/note'
 import { Position, getBeatByOffset } from '@/utils/position'
+import config from '@/utils/config'
+
+const pianoRollRef = ref<HTMLDivElement>()
+const tracksRef = ref<HTMLDivElement>()
+
+/**
+ * Zoom
+ */
+
+const horizontalZoomScale = ref(1)
+const verticalZoomScale = ref(1)
+
+const beatWidth = computed(() => config.beatWidth * horizontalZoomScale.value)
+const pitchHeight = computed(() => config.pitchHeight * verticalZoomScale.value)
+
+onMounted(() => {
+  // zoom event listener
+  pianoRollRef.value?.addEventListener('wheel', e => {
+    if (e.ctrlKey) {
+      if (e.deltaY < 0) {
+        horizontalZoomScale.value += config.zoomFactor
+        horizontalZoomScale.value >= config.maxZoom && (horizontalZoomScale.value = config.maxZoom)
+      } else if (e.deltaY > 0) {
+        horizontalZoomScale.value -= config.zoomFactor
+        horizontalZoomScale.value * config.beatWidth * barNumber.value * 4 < tracksRef.value!.clientWidth && (horizontalZoomScale.value += config.zoomFactor)
+      }
+      e.preventDefault()
+    }
+    if (e.altKey) {
+      if (e.deltaY < 0) {
+        verticalZoomScale.value += config.zoomFactor
+        verticalZoomScale.value >= config.maxZoom && (verticalZoomScale.value = config.maxZoom)
+      } else if (e.deltaY > 0) {
+        verticalZoomScale.value -= config.zoomFactor
+        verticalZoomScale.value <= config.minZoom && (verticalZoomScale.value = config.minZoom)
+      }
+      e.preventDefault()
+    }
+  })
+})
+
+/**
+ * Note
+ */
 
 const notes = ref<Note[]>([])
 
 const barNumber = ref(0)
-const beatWidth = ref(24)
-const pitchHeight = ref(24)
-
-const tracks = ref<HTMLDivElement>()
 
 onMounted(() => {
   // get init bar number
-  barNumber.value = Math.round(tracks.value!.clientWidth / beatWidth.value / 4)
+  barNumber.value = Math.round(tracksRef.value!.clientWidth / beatWidth.value / 4) + 1
 
   // scroll to C3
   document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][range="3"]')?.scrollIntoView({ block: 'center' })
@@ -116,8 +160,6 @@ const onDeleteNote = (note: Note) => {
 const onWidthChange = (noteWidth: number) => {
   currentNoteLength = noteWidth
 }
-
-// TODO: zoom
 
 // TODO: play
 
