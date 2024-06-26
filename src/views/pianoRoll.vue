@@ -16,6 +16,7 @@
           :style="{ height: `${pitchHeight}px` }"
           :pitch="pitch"
           :range="range"
+          @click="playNote(`${pitch}${range}`)"
         >
           {{ pitch }}{{ range }}
         </div>
@@ -73,12 +74,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import type { Pitch, Range } from '@/utils/constants'
+import type { Pitch, PitchRange, Range } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
 import { ALL_PITCHES, ALL_RANGES, isBlackKey } from '@/utils/constants'
 import { Note } from '@/utils/note'
 import { Position, getBeatByOffset } from '@/utils/position'
 import config from '@/utils/config'
+import { Synth } from '@/utils/synth'
 
 const pianoRollRef = ref<HTMLDivElement>()
 const tracksRef = ref<HTMLDivElement>()
@@ -162,6 +164,11 @@ const onWidthChange = (noteWidth: number) => {
 }
 
 // TODO: play
+const synth = new Synth()
+
+const playNote = (note: PitchRange) => {
+  synth.play(note, 4)
+}
 
 // TODO: keyboard play
 
@@ -198,6 +205,7 @@ const onWidthChange = (noteWidth: number) => {
     .pitch {
       padding-right: 4px;
       font-size: 12px;
+      cursor: pointer;
     }
 
     .pitch.white-key {
