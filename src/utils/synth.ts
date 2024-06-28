@@ -1,5 +1,4 @@
 import { Sampler, loaded, getTransport } from 'tone'
-import { isDefined } from '@vueuse/core'
 import { Note } from './note'
 import type { PitchRange } from './constants'
 
@@ -48,6 +47,7 @@ export class Synth {
     }).toDestination()
     loaded().then(() => {
       this.isLoaded = true
+      getTransport().bpm.rampTo(200, 0.1)
     })
   }
 
@@ -65,22 +65,29 @@ export class Synth {
       {
         '4n': beats
       },
-      isDefined(startTime) ? { '4n': startTime } : undefined
+      startTime
     )
   }
 
   playNotesByBeats(notes: Note[]) {
-    // const transport = getTransport()
     notes.forEach(note => {
-      this.playByBeats(note.getPitchRange(), note.width, note.start.beat)
+      getTransport().scheduleOnce(
+        time => {
+          this.playByBeats(note.getPitchRange(), note.width, time)
+        },
+        {
+          '4n': note.start.beat
+        }
+      )
     })
+    getTransport().start()
   }
 
   stop() {
-    this.synth.triggerRelease(0.1)
+    getTransport().stop()
   }
 
   setBPM(bpm: number) {
-    getTransport().bpm.rampTo(bpm, 0.1)
+    getTransport().bpm.value = bpm
   }
 }

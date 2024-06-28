@@ -73,7 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watchEffect } from 'vue'
+import { ref, computed, onMounted, watchEffect, onBeforeUnmount, reactive, watch } from 'vue'
+import { getTransport } from 'tone'
 import type { Pitch, PitchRange, Range } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
 import { ALL_PITCHES, ALL_RANGES, isBlackKey } from '@/utils/constants'
@@ -131,7 +132,7 @@ const barNumber = ref(0)
 
 onMounted(() => {
   // get init bar number
-  barNumber.value = Math.round(tracksRef.value!.clientWidth / beatWidth.value / 4) + 1
+  barNumber.value = Math.ceil(tracksRef.value!.clientWidth / beatWidth.value / 4)
 
   // scroll to C3
   document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][range="4"]')?.scrollIntoView({ block: 'center' })
@@ -175,24 +176,61 @@ const playNote = (note: PitchRange) => {
   synth.playByBeats(note, 1)
 }
 
+const loopRange = reactive({
+  start: new Position(0),
+  end: new Position(0),
+  isLocked: false
+})
+watch(
+  notes,
+  () => {
+    if (!loopRange.isLocked) {
+      const lastNote = notes.value.sort((note1, note2) => note1.start.beat + note1.width - (note2.start.beat + note2.width))[notes.value.length - 1]
+      const endBeatNumber = lastNote.start.beat + lastNote.width
+      loopRange.end = new Position(Math.ceil(endBeatNumber / 4) * 4)
+    }
+  },
+  {
+    deep: true
+  }
+)
+
+const loopNotes = computed(() => {
+  return notes.value.filter(note => note.start.beat >= loopRange.start.beat && note.start.beat + note.width <= loopRange.end.beat)
+})
+
 const isPlaying = ref(false)
 const play = () => {
   if (!isPlaying.value) {
     isPlaying.value = true
-    synth.playNotesByBeats(notes.value)
+    getTransport().scheduleOnce(
+      () => {
+        isPlaying.value = false
+        synth.stop()
+      },
+      {
+        '4n': loopRange.end.beat - loopRange.start.beat
+      }
+    )
+    synth.playNotesByBeats(loopNotes.value)
   } else {
     isPlaying.value = false
     synth.stop()
   }
 }
 
+const handleSpacePress = (e: KeyboardEvent) => {
+  if (e.key === ' ') {
+    play()
+    e.preventDefault()
+  }
+}
+
 onMounted(() => {
-  document.addEventListener('keypress', e => {
-    if (e.key === ' ') {
-      play()
-      e.preventDefault()
-    }
-  })
+  document.addEventListener('keypress', handleSpacePress)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keypress', handleSpacePress)
 })
 
 // TODO: keyboard play
