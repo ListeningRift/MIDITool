@@ -69,14 +69,14 @@ export class Synth {
     )
   }
 
-  playNotesByBeats(notes: Note[]) {
+  playNotesByBeats(notes: Note[], startBeat: number) {
     notes.forEach(note => {
       getTransport().scheduleOnce(
         time => {
           this.playByBeats(note.getPitchRange(), note.width, time)
         },
         {
-          '4n': note.start.beat
+          '4n': note.start.beat - startBeat
         }
       )
     })
