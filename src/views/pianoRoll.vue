@@ -70,6 +70,7 @@
         :note="note"
         :beat-width="beatWidth"
         :pitch-height="pitchHeight"
+        @click="onClickNote"
         @delete="onDeleteNote"
         @width-change="onWidthChange"
       ></note-component>
@@ -159,6 +160,10 @@ const onAddNote = (e: MouseEvent) => {
       range
     })
   )
+}
+
+const onClickNote = (note: Note) => {
+  currentNoteLength = note.width
 }
 
 const onDeleteNote = (note: Note) => {

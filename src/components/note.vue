@@ -4,7 +4,7 @@
     class="note"
     :style="{ width: `${width}px`, height: `${props.pitchHeight}px`, top: `${top}px`, left: `${left}px`, 'z-index': props.note.start.beat }"
     :note="props.note.getPitchRange()"
-    @click.stop
+    @click.stop="onClick"
     @contextmenu.stop.prevent="onDelete"
   >
     {{ props.note.getPitchRange() }}
@@ -27,6 +27,7 @@ const props = defineProps<{
 
 const emits = defineEmits<{
   (e: 'delete', note: Note): void
+  (e: 'click', note: Note): void
   (e: 'widthChange', noteWidth: number): void
 }>()
 
@@ -97,6 +98,10 @@ watch(
 
 const onDelete = () => {
   emits('delete', props.note)
+}
+
+const onClick = () => {
+  emits('click', props.note)
 }
 </script>
 
