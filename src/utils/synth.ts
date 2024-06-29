@@ -38,6 +38,7 @@ const sampleMap = {
 export class Synth {
   private synth: Sampler
   public isLoaded = false
+  private bpm = 120
 
   constructor() {
     this.synth = new Sampler({
@@ -47,7 +48,6 @@ export class Synth {
     }).toDestination()
     loaded().then(() => {
       this.isLoaded = true
-      getTransport().bpm.rampTo(200, 0.1)
     })
   }
 
@@ -88,6 +88,10 @@ export class Synth {
   }
 
   setBPM(bpm: number) {
-    getTransport().bpm.value = bpm
+    if (getTransport().state === 'stopped') {
+      getTransport().bpm.value = bpm
+    } else if (getTransport().state === 'started') {
+      getTransport().bpm.rampTo(bpm, 0.1)
+    }
   }
 }

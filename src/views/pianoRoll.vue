@@ -52,12 +52,17 @@
           <div
             v-for="beat in 4"
             :key="`beat-${4 * (bar - 1) + beat}`"
-            :beat="4 * bar + beat"
+            :beat="4 * (bar - 1) + beat"
             class="beat"
             :style="{ width: `${beatWidth}px` }"
           ></div>
         </div>
       </div>
+
+      <div
+        ref="timeIndicatorRef"
+        class="time-indicator"
+      ></div>
 
       <note-component
         v-for="note in notes"
@@ -74,7 +79,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watchEffect, onBeforeUnmount, reactive, watch } from 'vue'
-import { getTransport } from 'tone'
+import { Time, getTransport, now } from 'tone'
 import type { Pitch, PitchRange, Range } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
 import { ALL_PITCHES, ALL_RANGES, isBlackKey } from '@/utils/constants'
@@ -200,6 +205,43 @@ const loopNotes = computed(() => {
 })
 
 const isPlaying = ref(false)
+const timeIndicatorRef = ref<HTMLDivElement>()
+
+const timeIndicatorPlay = () => {
+  const start = now()
+  const durationTime = Time({
+    '4n': loopRange.end.beat - loopRange.start.beat
+  }).toSeconds()
+  const startElement = document.querySelector(`.piano-roll .tracks .beats .bar .beat[beat="${loopRange.start.beat + 1}"]`) as HTMLElement
+  const startX = startElement.offsetLeft
+
+  const targetElement = document.querySelector(`.piano-roll .tracks .beats .bar .beat[beat="${loopRange.end.beat + 1}"]`) as HTMLElement
+  const targetX = targetElement.offsetLeft
+
+  function animate() {
+    const timeElapsed = now() - start
+    const progress = Math.min(timeElapsed / durationTime, 1)
+
+    // 计算当前应处位置
+    const currentX = startX + (targetX - startX) * progress
+
+    // 更新位置
+    timeIndicatorRef.value && (timeIndicatorRef.value.style.transform = `translateX(${currentX}px)`)
+
+    // 如果动画还没结束，继续调用requestAnimationFrame
+    if (timeElapsed < durationTime) {
+      requestAnimationFrame(animate)
+    }
+  }
+
+  // 启动动画
+  requestAnimationFrame(animate)
+}
+
+const resetTimeIndicator = () => {
+  timeIndicatorRef.value && (timeIndicatorRef.value.style.transform = `translateX(0px)`)
+}
+
 const play = () => {
   if (!isPlaying.value) {
     isPlaying.value = true
@@ -207,15 +249,18 @@ const play = () => {
       () => {
         isPlaying.value = false
         synth.stop()
+        resetTimeIndicator()
       },
       {
         '4n': loopRange.end.beat - loopRange.start.beat
       }
     )
+    timeIndicatorPlay()
     synth.playNotesByBeats(loopNotes.value)
   } else {
     isPlaying.value = false
     synth.stop()
+    resetTimeIndicator()
   }
 }
 
@@ -232,8 +277,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('keypress', handleSpacePress)
 })
-
-// TODO: keyboard play
 
 // TODO: import and export
 
@@ -327,6 +370,15 @@ onBeforeUnmount(() => {
           }
         }
       }
+    }
+
+    .time-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 100%;
+      background: @bgHeavy;
     }
   }
 }
