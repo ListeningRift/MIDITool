@@ -338,8 +338,8 @@ const timeIndicatorPlay = () => {
   const startElement = document.querySelector(`.piano-roll .tracks .beats .bar .beat[beat="${loopRange.start.beat + 1}"]`) as HTMLElement
   const startX = startElement.offsetLeft
 
-  const targetElement = document.querySelector(`.piano-roll .tracks .beats .bar .beat[beat="${loopRange.end.beat + 1}"]`) as HTMLElement
-  const targetX = targetElement.offsetLeft
+  const targetElement = document.querySelector(`.piano-roll .tracks .beats .bar .beat[beat="${loopRange.end.beat}"]`) as HTMLElement
+  const targetX = targetElement.offsetLeft + beatWidth.value
 
   function animate() {
     const timeElapsed = now() - start
