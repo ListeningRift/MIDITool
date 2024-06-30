@@ -113,6 +113,9 @@ const onClick = () => {
   padding: 0 8px;
   color: @textWhite;
   font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   border-radius: 4px;
   border: 1px solid @cardBlue;
   background: @primary;

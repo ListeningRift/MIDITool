@@ -63,6 +63,9 @@
         <div
           ref="tracksRef"
           class="tracks"
+          @drop="onDrop"
+          @dragover="onDragOver"
+          @dragleave="onDragLeave"
         >
           <simplebar ref="tracksSimplebarRef">
             <template
@@ -116,6 +119,13 @@
               @width-change="onWidthChange"
             ></note-component>
           </simplebar>
+
+          <div
+            v-if="isDroping"
+            class="midi-drop-zone"
+          >
+            Drop the MIDI file here!
+          </div>
         </div>
       </simplebar>
     </div>
@@ -125,6 +135,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watchEffect, onBeforeUnmount, reactive, watch, nextTick } from 'vue'
 import { Time, getTransport, now } from 'tone'
+import { Midi } from '@tonejs/midi'
 import simplebar from 'simplebar-vue'
 import type { Pitch, PitchOctave, Octave } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
@@ -135,6 +146,7 @@ import { Position, getBeatByOffset } from '@/utils/position'
 import config from '@/utils/config'
 import { Synth } from '@/utils/synth'
 import 'simplebar-vue/dist/simplebar.min.css'
+import { fileToArrayBuffer } from '@/utils/utils'
 
 const pianoRollRef = ref<HTMLDivElement>()
 const tracksRef = ref<HTMLDivElement>()
@@ -183,12 +195,21 @@ const notes = ref<Note[]>([])
 
 const barNumber = ref(0)
 
+const autoSetBarNumber = () => {
+  const bars = Math.ceil(tracksRef.value!.clientWidth / beatWidth.value / 4)
+  if (bars > barNumber.value) barNumber.value = bars
+}
+
 onMounted(() => {
   // get init bar number
-  barNumber.value = Math.ceil(tracksRef.value!.clientWidth / beatWidth.value / 4)
+  autoSetBarNumber()
+  window.addEventListener('resize', autoSetBarNumber)
 
   // scroll to C3
   document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][octave="4"]')?.scrollIntoView({ block: 'center' })
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', autoSetBarNumber)
 })
 
 let currentNoteLength = 4
@@ -398,7 +419,49 @@ onBeforeUnmount(() => {
   document.removeEventListener('keypress', handleSpacePress)
 })
 
-// TODO: import and export
+/**
+ * import and export MIDI
+ */
+
+const isDroping = ref(false)
+
+const onDrop = (e: DragEvent) => {
+  isDroping.value = false
+  const midiFile = e.dataTransfer?.files?.[0]
+  if (midiFile) {
+    fileToArrayBuffer(midiFile).then(buffer => {
+      if (buffer) {
+        const midiData = new Midi(buffer)
+        notes.value = []
+        midiData.tracks.forEach((track, index) => {
+          const bpm = parseFloat(midiData.header.tempos[index].bpm.toFixed(3))
+          const timePerBeat = 60 / bpm
+          track.notes.forEach(note => {
+            notes.value.push(
+              new Note({
+                pitch: note.pitch as Pitch,
+                octave: note.octave as Octave,
+                start: new Position(Math.round(note.time / timePerBeat)),
+                duration: Math.round(note.duration / timePerBeat)
+              })
+            )
+          })
+        })
+      }
+    })
+  }
+  e.preventDefault()
+}
+
+const onDragOver = (e: DragEvent) => {
+  isDroping.value = true
+  e.preventDefault()
+}
+
+const onDragLeave = (e: DragEvent) => {
+  isDroping.value = false
+  e.preventDefault()
+}
 
 // TODO: chord auto complete
 
@@ -585,6 +648,24 @@ onBeforeUnmount(() => {
       width: 1px;
       height: 100%;
       background: @bgHeavy;
+    }
+
+    .midi-drop-zone {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      height: 100%;
+      font-size: @fontSizeLarge;
+      font-weight: @fontWeightMedium;
+      background: fade(@bgBase, 60%);
+      z-index: 99;
+      pointer-events: none;
     }
   }
 }
