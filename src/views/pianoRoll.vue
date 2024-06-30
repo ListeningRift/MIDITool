@@ -304,7 +304,9 @@ const loopRange = reactive({
 watch(
   notes,
   () => {
-    // TODO: recalculate barNumber
+    const lastNote = notes.value.sort((note1, note2) => note1.start.beat + note1.width - (note2.start.beat + note2.width))[notes.value.length - 1]
+    const lastBar = Math.ceil((lastNote.start.beat + lastNote.width) / 4)
+    if (lastBar > barNumber.value) barNumber.value = lastBar
   },
   {
     deep: true
@@ -321,7 +323,7 @@ const isInRange = (beat: number) => {
 }
 
 const loopNotes = computed(() => {
-  return notes.value.filter(note => note.start.beat >= loopRange.start.beat && note.start.beat + note.width <= loopRange.end.beat)
+  return notes.value.filter(note => note.start.beat >= loopRange.start.beat && note.start.beat <= loopRange.end.beat)
 })
 
 const isPlaying = ref(false)
