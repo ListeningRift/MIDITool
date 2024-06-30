@@ -8,7 +8,7 @@
       <div
         ref="timeScaleRef"
         class="time-scale"
-        @click="onTimeScaleClick"
+        @mousedown="onTimeScaleMouseDown"
       >
         <div
           v-for="bar in barNumber"
@@ -21,6 +21,7 @@
             :key="`beat-${4 * (bar - 1) + beat}`"
             :beat="4 * (bar - 1) + beat"
             class="beat"
+            :class="{ 'in-range': isInRange(4 * (bar - 1) + beat) }"
             :style="{ width: `${beatWidth}px` }"
           >
             <span
@@ -92,6 +93,7 @@
                   :key="`beat-${4 * (bar - 1) + beat}`"
                   :beat="4 * (bar - 1) + beat"
                   class="beat"
+                  :class="{ 'in-range': isInRange(4 * (bar - 1) + beat) }"
                   :style="{ width: `${beatWidth}px` }"
                 ></div>
               </div>
@@ -244,11 +246,39 @@ watch(pitchHeight, () => {
   })
 })
 
-const onTimeScaleClick = (e: MouseEvent) => {
-  const distance = e.clientX - timeScaleRef.value!.getBoundingClientRect().left + timeScaleRef.value!.scrollLeft
-  const beatNumber = Math.floor(distance / beatWidth.value)
-  setTimeIndicatorByBeats(beatNumber)
+const getClickBeatNumber = (clientX: number) => {
+  const distance = clientX - timeScaleRef.value!.getBoundingClientRect().left + timeScaleRef.value!.scrollLeft
+  return Math.floor(distance / beatWidth.value)
+}
+
+const onTimeScaleMouseMove = (e: MouseEvent) => {
+  const beatNumber = getClickBeatNumber(e.clientX)
+  if (beatNumber === loopRange.start.beat) {
+    if (!loopRange.isLocked) loopRange.end = new Position(beatNumber + 1)
+    loopRange.isLocked = true
+  } else if (beatNumber > loopRange.start.beat) {
+    loopRange.isLocked = true
+    loopRange.end = new Position(beatNumber + 1)
+  } else if (beatNumber < loopRange.start.beat) {
+    if (!loopRange.isLocked) loopRange.end = new Position(loopRange.start.beat + 1)
+    loopRange.isLocked = true
+    loopRange.start = new Position(beatNumber)
+    setTimeIndicatorByBeats(beatNumber)
+  }
+}
+
+const onTimeScaleMouseUp = () => {
+  timeScaleRef.value?.removeEventListener('mousemove', onTimeScaleMouseMove)
+  timeScaleRef.value?.removeEventListener('mouseup', onTimeScaleMouseUp)
+}
+
+const onTimeScaleMouseDown = (e: MouseEvent) => {
+  const beatNumber = getClickBeatNumber(e.clientX)
+  loopRange.isLocked = false
   loopRange.start = new Position(beatNumber)
+  setTimeIndicatorByBeats(beatNumber)
+  timeScaleRef.value?.addEventListener('mousemove', onTimeScaleMouseMove)
+  timeScaleRef.value?.addEventListener('mouseup', onTimeScaleMouseUp)
 }
 
 /**
@@ -274,16 +304,21 @@ const loopRange = reactive({
 watch(
   notes,
   () => {
-    if (!loopRange.isLocked) {
-      const lastNote = notes.value.sort((note1, note2) => note1.start.beat + note1.width - (note2.start.beat + note2.width))[notes.value.length - 1]
-      const endBeatNumber = lastNote ? lastNote.start.beat + lastNote.width : 0
-      loopRange.end = new Position(Math.ceil(endBeatNumber / 4) * 4)
-    }
+    // TODO: recalculate barNumber
   },
   {
     deep: true
   }
 )
+watch(barNumber, () => {
+  if (!loopRange.isLocked) {
+    loopRange.end = new Position(barNumber.value * 4)
+  }
+})
+
+const isInRange = (beat: number) => {
+  return loopRange.start.beat < beat && beat <= loopRange.end.beat && loopRange.isLocked
+}
 
 const loopNotes = computed(() => {
   return notes.value.filter(note => note.start.beat >= loopRange.start.beat && note.start.beat + note.width <= loopRange.end.beat)
@@ -396,6 +431,7 @@ onBeforeUnmount(() => {
       background: @bgBase;
       border-bottom: 1px solid @borderMedium;
       overflow: hidden;
+      user-select: none;
 
       .bar {
         display: flex;
@@ -404,17 +440,24 @@ onBeforeUnmount(() => {
         pointer-events: none;
 
         .beat {
+          position: relative;
+          height: @timeScaleHeight;
           box-sizing: border-box;
 
-          &:last-child {
+          &:last-child::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 1px;
             height: 18px;
-            border-right: 1px solid @borderMedium;
+            background: @borderMedium;
           }
 
           .bar-number {
             position: relative;
             left: 4px;
-            bottom: 12px;
+            top: 6px;
             color: @textDescriptive;
           }
         }
@@ -425,6 +468,12 @@ onBeforeUnmount(() => {
         left: -12px;
         bottom: 0;
       }
+    }
+  }
+
+  .bar .beat {
+    &.in-range {
+      background: fade(@cardRed, 12%);
     }
   }
 
