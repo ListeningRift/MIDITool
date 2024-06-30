@@ -3,11 +3,11 @@
     ref="noteRef"
     class="note"
     :style="{ width: `${width}px`, height: `${props.pitchHeight}px`, top: `${top}px`, left: `${left}px`, 'z-index': props.note.start.beat }"
-    :note="props.note.getPitchRange()"
+    :note="props.note.getPitchOctave()"
     @click.stop="onClick"
     @contextmenu.stop.prevent="onDelete"
   >
-    {{ props.note.getPitchRange() }}
+    {{ props.note.getPitchOctave() }}
   </div>
 </template>
 
@@ -15,8 +15,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDraggable } from '@vueuse/core'
 import type { Note } from '@/utils/note'
-import type { Pitch, Range } from '@/utils/constants'
-import { ALL_PITCHES, ALL_RANGES } from '@/utils/constants'
+import type { Pitch, Octave } from '@/utils/constants'
+import { ALL_PITCHES, ALL_OCTAVES } from '@/utils/constants'
 import { Position, getBeatByOffset } from '@/utils/position'
 
 const props = defineProps<{
@@ -31,9 +31,9 @@ const emits = defineEmits<{
   (e: 'widthChange', noteWidth: number): void
 }>()
 
-const width = computed(() => props.note.width * props.beatWidth)
+const width = computed(() => props.note.duration * props.beatWidth)
 const left = computed(() => props.note.start.beat * props.beatWidth)
-const top = computed(() => ((Math.max(...ALL_RANGES) - props.note.range) * ALL_PITCHES.length + ALL_PITCHES.indexOf(props.note.pitch)) * props.pitchHeight)
+const top = computed(() => ((Math.max(...ALL_OCTAVES) - props.note.octave) * ALL_PITCHES.length + ALL_PITCHES.indexOf(props.note.pitch)) * props.pitchHeight)
 
 const noteRef = ref<HTMLDivElement>()
 onMounted(() => {
@@ -58,27 +58,27 @@ onMounted(() => {
       if (resizeDirection === 'start') {
         // resize start
         const startBeat = getBeatByOffset(event.pageX - pointerOffset - pitchEl!.getBoundingClientRect().x, props.beatWidth)
-        const width = props.note.start.beat + props.note.width - startBeat
-        props.note.width > 0 &&
+        const duration = props.note.start.beat + props.note.duration - startBeat
+        props.note.duration > 0 &&
           props.note.update({
             start: new Position(startBeat),
-            width
+            duration
           })
       } else if (resizeDirection === 'end') {
         // resize end
         const endBeat = getBeatByOffset(event.pageX - pitchEl!.getBoundingClientRect().x, props.beatWidth) + 1
         props.note.update({
-          width: endBeat - props.note.start.beat
+          duration: endBeat - props.note.start.beat
         })
       } else {
         // drag
         const startBeat = getBeatByOffset(event.pageX - pointerOffset - pitchEl!.getBoundingClientRect().x, props.beatWidth)
         const pitch = targetEl.getAttribute('pitch') as Pitch
-        const range = Number(targetEl.getAttribute('range')) as Range
+        const octave = Number(targetEl.getAttribute('octave')) as Octave
         props.note.update({
           start: new Position(startBeat),
           pitch,
-          range
+          octave
         })
       }
     },
@@ -90,9 +90,9 @@ onMounted(() => {
 })
 
 watch(
-  () => [props.note.start, props.note.width],
+  () => [props.note.start, props.note.duration],
   () => {
-    emits('widthChange', props.note.width)
+    emits('widthChange', props.note.duration)
   }
 )
 

@@ -43,20 +43,20 @@
       <simplebar ref="pianoRollSimplebarRef">
         <div class="keyboard">
           <template
-            v-for="range in ALL_RANGES"
-            :key="range"
+            v-for="octave in ALL_OCTAVES"
+            :key="octave"
           >
             <div
               v-for="pitch in ALL_PITCHES"
-              :key="String(range) + String(pitch)"
+              :key="String(octave) + String(pitch)"
               class="pitch"
               :class="[isBlackKey(pitch) ? 'black-key' : 'white-key']"
               :style="{ height: `${pitchHeight}px` }"
               :pitch="pitch"
-              :range="range"
-              @click="playNote(`${pitch}${range}`)"
+              :octave="octave"
+              @click="playNote(`${pitch}${octave}`)"
             >
-              {{ pitch }}{{ range }}
+              {{ pitch }}{{ octave }}
             </div>
           </template>
         </div>
@@ -66,17 +66,17 @@
         >
           <simplebar ref="tracksSimplebarRef">
             <template
-              v-for="range in ALL_RANGES"
-              :key="range"
+              v-for="octave in ALL_OCTAVES"
+              :key="octave"
             >
               <div
                 v-for="pitch in ALL_PITCHES"
-                :key="String(range) + String(pitch)"
+                :key="String(octave) + String(pitch)"
                 class="pitch"
                 :class="[isBlackKey(pitch) ? 'black-key' : 'white-key']"
                 :style="{ width: `${beatWidth * 4 * barNumber}px`, height: `${pitchHeight}px` }"
                 :pitch="pitch"
-                :range="range"
+                :octave="octave"
                 @click="onAddNote"
               ></div>
             </template>
@@ -126,10 +126,10 @@
 import { ref, computed, onMounted, watchEffect, onBeforeUnmount, reactive, watch, nextTick } from 'vue'
 import { Time, getTransport, now } from 'tone'
 import simplebar from 'simplebar-vue'
-import type { Pitch, PitchRange, Range } from '@/utils/constants'
+import type { Pitch, PitchOctave, Octave } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
 import timeIndicatorTriangle from '@/components/timeIndicatorTriangle.vue'
-import { ALL_PITCHES, ALL_RANGES, isBlackKey } from '@/utils/constants'
+import { ALL_PITCHES, ALL_OCTAVES, isBlackKey } from '@/utils/constants'
 import { Note } from '@/utils/note'
 import { Position, getBeatByOffset } from '@/utils/position'
 import config from '@/utils/config'
@@ -188,7 +188,7 @@ onMounted(() => {
   barNumber.value = Math.ceil(tracksRef.value!.clientWidth / beatWidth.value / 4)
 
   // scroll to C3
-  document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][range="4"]')?.scrollIntoView({ block: 'center' })
+  document.querySelector('.piano-roll .keyboard .pitch[pitch="C"][octave="4"]')?.scrollIntoView({ block: 'center' })
 })
 
 let currentNoteLength = 4
@@ -196,21 +196,21 @@ let currentNoteLength = 4
 // add note
 const onAddNote = (e: MouseEvent) => {
   const pitch = (e.target as HTMLElement).getAttribute('pitch') as Pitch
-  const range = Number((e.target as HTMLElement).getAttribute('range')) as Range
+  const octave = Number((e.target as HTMLElement).getAttribute('octave')) as Octave
   const startPosition = new Position(getBeatByOffset(e.offsetX, beatWidth.value))
 
   notes.value.push(
     new Note({
       start: startPosition,
-      width: currentNoteLength,
+      duration: currentNoteLength,
       pitch,
-      range
+      octave
     })
   )
 }
 
 const onClickNote = (note: Note) => {
-  currentNoteLength = note.width
+  currentNoteLength = note.duration
 }
 
 const onDeleteNote = (note: Note) => {
@@ -292,7 +292,7 @@ watchEffect(() => {
   synth.setBPM(bpm.value)
 })
 
-const playNote = (note: PitchRange) => {
+const playNote = (note: PitchOctave) => {
   synth.playByBeats(note, 1)
 }
 
@@ -304,8 +304,8 @@ const loopRange = reactive({
 watch(
   notes,
   () => {
-    const lastNote = notes.value.sort((note1, note2) => note1.start.beat + note1.width - (note2.start.beat + note2.width))[notes.value.length - 1]
-    const lastBar = Math.ceil((lastNote.start.beat + lastNote.width) / 4)
+    const lastNote = notes.value.sort((note1, note2) => note1.start.beat + note1.duration - (note2.start.beat + note2.duration))[notes.value.length - 1]
+    const lastBar = Math.ceil((lastNote.start.beat + lastNote.duration) / 4)
     if (lastBar > barNumber.value) barNumber.value = lastBar
   },
   {

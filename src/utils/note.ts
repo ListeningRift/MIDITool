@@ -1,32 +1,32 @@
-import type { Pitch, PitchRange, Range } from './constants'
+import type { Pitch, PitchOctave, Octave } from './constants'
 import type { Position } from './position'
 
 export interface NoteAttribute {
   start: Position
-  width: number
+  duration: number
   pitch: Pitch
-  range: Range
+  octave: Octave
 }
 
 export class Note implements NoteAttribute {
   public start: Position
-  public width: number
+  public duration: number
   public pitch: Pitch
-  public range: Range
+  public octave: Octave
   public readonly id: number
 
   constructor(params: NoteAttribute) {
-    const { start, width, pitch, range } = params
+    const { start, duration, pitch, octave } = params
     this.start = start
-    this.width = width
+    this.duration = duration
     this.pitch = pitch
-    this.range = range
+    this.octave = octave
     this.id = Date.now()
   }
 
   update(newNote: Partial<NoteAttribute>) {
-    if (newNote.width) {
-      this.width = newNote.width
+    if (newNote.duration) {
+      this.duration = newNote.duration
     }
     if (newNote.start) {
       this.start = newNote.start
@@ -34,18 +34,18 @@ export class Note implements NoteAttribute {
     if (newNote.pitch) {
       this.pitch = newNote.pitch
     }
-    if (newNote.range) {
-      this.range = newNote.range
+    if (newNote.octave) {
+      this.octave = newNote.octave
     }
   }
 
-  getPitchRange(): PitchRange {
-    return `${this.pitch}${this.range}`
+  getPitchOctave(): PitchOctave {
+    return `${this.pitch}${this.octave}`
   }
 }
 
-export function getNotesByPitch(notes: Note[], pitch: Pitch, range: Range): Note[] {
+export function getNotesByPitch(notes: Note[], pitch: Pitch, octave: Octave): Note[] {
   return notes.filter(note => {
-    return note.pitch === pitch && note.range === range
+    return note.pitch === pitch && note.octave === octave
   })
 }
