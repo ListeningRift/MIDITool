@@ -4,7 +4,32 @@
     class="piano-roll"
   >
     <div class="piano-roll-header">
-      <div class="keyboard"></div>
+      <div class="operation">
+        <dropdown>
+          <more-button></more-button>
+          <template #menu>
+            <div
+              class="dropdown-menu-item"
+              @click="importMIDI"
+            >
+              import MIDI
+              <input
+                ref="importMIDIRef"
+                type="file"
+                accept=".mid"
+                style="display: none"
+                @change="handleImportMIDI"
+              />
+            </div>
+            <div
+              class="dropdown-menu-item"
+              @click="exportMIDI"
+            >
+              export MIDI
+            </div>
+          </template>
+        </dropdown>
+      </div>
       <div
         ref="timeScaleRef"
         class="time-scale"
@@ -140,13 +165,15 @@ import simplebar from 'simplebar-vue'
 import type { Pitch, PitchOctave, Octave } from '@/utils/constants'
 import NoteComponent from '@/components/note.vue'
 import timeIndicatorTriangle from '@/components/timeIndicatorTriangle.vue'
+import moreButton from '@/components/moreButton.vue'
+import dropdown from '@/components/dropdown.vue'
 import { ALL_PITCHES, ALL_OCTAVES, isBlackKey } from '@/utils/constants'
 import { Note } from '@/utils/note'
 import { Position, getBeatByOffset } from '@/utils/position'
 import config from '@/utils/config'
 import { Synth } from '@/utils/synth'
-import 'simplebar-vue/dist/simplebar.min.css'
 import { fileToArrayBuffer } from '@/utils/utils'
+import 'simplebar-vue/dist/simplebar.min.css'
 
 const pianoRollRef = ref<HTMLDivElement>()
 const tracksRef = ref<HTMLDivElement>()
@@ -463,6 +490,64 @@ const onDragLeave = (e: DragEvent) => {
   e.preventDefault()
 }
 
+const handleImportMIDI = (event: Event) => {
+  const files = (event.target as HTMLInputElement)?.files
+  if (files && files.length > 0) {
+    const midiFile = files[0]
+    fileToArrayBuffer(midiFile).then(buffer => {
+      if (buffer) {
+        const midiData = new Midi(buffer)
+        notes.value = []
+        midiData.tracks.forEach((track, index) => {
+          const bpm = parseFloat(midiData.header.tempos[index].bpm.toFixed(3))
+          const timePerBeat = 60 / bpm
+          track.notes.forEach(note => {
+            notes.value.push(
+              new Note({
+                pitch: note.pitch as Pitch,
+                octave: note.octave as Octave,
+                start: new Position(Math.round(note.time / timePerBeat)),
+                duration: Math.round(note.duration / timePerBeat)
+              })
+            )
+          })
+        })
+      }
+    })
+  }
+}
+
+const importMIDIRef = ref<HTMLInputElement>()
+const importMIDI = () => {
+  importMIDIRef.value?.click()
+}
+
+const exportMIDI = () => {
+  const midi = new Midi()
+  const track = midi.addTrack()
+  notes.value.forEach(note => {
+    track.addNote({
+      name: note.getPitchOctave(),
+      pitch: note.pitch,
+      octave: note.octave,
+      time: Time({
+        '4n': note.start.beat
+      }).toSeconds(),
+      duration: Time({
+        '4n': note.duration
+      }).toSeconds()
+    })
+  })
+
+  const blob = new Blob([midi.toArray()], { type: 'mid' })
+  const url = URL.createObjectURL(blob)
+  const downloadLink = document.createElement('a')
+  downloadLink.setAttribute('href', url)
+  downloadLink.setAttribute('download', 'Track.mid')
+  downloadLink.click()
+  URL.revokeObjectURL(url)
+}
+
 // TODO: chord auto complete
 
 // TODO: melody auto complete
@@ -470,8 +555,10 @@ const onDragLeave = (e: DragEvent) => {
 
 <style lang="less" scoped>
 @timeScaleHeight: 36px;
+@keyboardWidth: 88px;
 
 .piano-roll {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -481,10 +568,15 @@ const onDragLeave = (e: DragEvent) => {
     display: flex;
     height: @timeScaleHeight;
 
-    .keyboard {
+    .operation {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      width: @keyboardWidth;
       height: 100%;
       flex-shrink: 0;
       border-right: 1px solid @borderMedium;
+      overflow: visible;
     }
 
     .time-scale {
@@ -569,7 +661,7 @@ const onDragLeave = (e: DragEvent) => {
   }
 
   .keyboard {
-    width: 88px;
+    width: @keyboardWidth;
     height: max-content;
     border-right: 1px solid @borderMedium;
 
@@ -592,7 +684,7 @@ const onDragLeave = (e: DragEvent) => {
 
   .tracks {
     position: relative;
-    width: calc(100% - 88px);
+    width: calc(100% - @keyboardWidth);
     height: max-content;
     flex-grow: 1;
     overflow-x: auto;
