@@ -1,5 +1,4 @@
 import { Sampler, loaded, getTransport } from 'tone'
-import { Note } from './note'
 import type { PitchOctave } from './constants'
 
 const sampleMap = {
@@ -38,7 +37,6 @@ const sampleMap = {
 export class Synth {
   private synth: Sampler
   public isLoaded = false
-  private bpm = 120
 
   constructor() {
     this.synth = new Sampler({
@@ -55,10 +53,6 @@ export class Synth {
     this.synth.triggerAttackRelease(pitch, duration, startTime)
   }
 
-  playBySeconds(pitch: PitchOctave | PitchOctave[], seconds: number, startTime?: number) {
-    this.play(pitch, seconds, startTime)
-  }
-
   playByBeats(pitch: PitchOctave | PitchOctave[], beats: number, startTime?: number) {
     this.play(
       pitch,
@@ -69,17 +63,7 @@ export class Synth {
     )
   }
 
-  playNotesByBeats(notes: Note[], startBeat: number) {
-    notes.forEach(note => {
-      getTransport().scheduleOnce(
-        time => {
-          this.playByBeats(note.getPitchOctave(), note.duration, time)
-        },
-        {
-          '4n': note.start.beat - startBeat
-        }
-      )
-    })
+  start() {
     getTransport().start()
   }
 
