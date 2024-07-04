@@ -1,32 +1,7 @@
 <template>
   <div class="midi-editor">
     <div class="midi-editor-header">
-      <div class="operation">
-        <dropdown>
-          <more-button></more-button>
-          <template #menu>
-            <div
-              class="dropdown-menu-item"
-              @click="importMIDI"
-            >
-              import MIDI
-              <input
-                ref="importMIDIRef"
-                type="file"
-                accept=".mid"
-                style="display: none"
-                @change="handleImportMIDI"
-              />
-            </div>
-            <div
-              class="dropdown-menu-item"
-              @click="exportMIDI"
-            >
-              export MIDI
-            </div>
-          </template>
-        </dropdown>
-      </div>
+      <div class="operation"></div>
       <div
         ref="timeScaleRef"
         class="time-scale"
@@ -81,17 +56,24 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watchEffect, onBeforeUnmount, reactive, watch } from 'vue'
 import { Time, getTransport, now } from 'tone'
-import { Midi } from '@tonejs/midi'
-import type { Pitch, PitchOctave, Octave } from '@/utils/constants'
+import type { PitchOctave } from '@/utils/constants'
 import timeIndicatorTriangle from '@/components/timeIndicatorTriangle.vue'
-import moreButton from '@/components/moreButton.vue'
-import dropdown from '@/components/dropdown.vue'
 import pianoRoll from '@/components/pianoRoll.vue'
 import { Note } from '@/utils/note'
 import { Position } from '@/utils/position'
 import config from '@/utils/config'
 import { Synth } from '@/utils/synth'
-import { fileToArrayBuffer } from '@/utils/utils'
+import { useVModel } from '@/utils/hooks'
+
+const props = defineProps<{
+  notes: Note[]
+}>()
+
+const emits = defineEmits<{
+  (e: 'update:notes', notes: Note[]): void
+}>()
+
+const notes = useVModel('notes', emits, props)
 
 /**
  * Zoom
@@ -105,8 +87,6 @@ const beatWidth = computed(() => config.beatWidth * horizontalZoomScale.value)
 /**
  * Note
  */
-
-const notes = ref<Note[]>([])
 
 const barNumber = ref(0)
 
@@ -271,72 +251,14 @@ onBeforeUnmount(() => {
   document.removeEventListener('keypress', handleSpacePress)
 })
 
-const handleImportMIDI = (event: Event) => {
-  const files = (event.target as HTMLInputElement)?.files
-  if (files && files.length > 0) {
-    const midiFile = files[0]
-    fileToArrayBuffer(midiFile).then(buffer => {
-      if (buffer) {
-        const midiData = new Midi(buffer)
-        notes.value = []
-        midiData.tracks.forEach((track, index) => {
-          const bpm = parseFloat(midiData.header.tempos[index].bpm.toFixed(3))
-          const timePerBeat = 60 / bpm
-          track.notes.forEach(note => {
-            notes.value.push(
-              new Note({
-                pitch: note.pitch as Pitch,
-                octave: note.octave as Octave,
-                start: new Position(Math.round(note.time / timePerBeat)),
-                duration: Math.round(note.duration / timePerBeat)
-              })
-            )
-          })
-        })
-      }
-    })
-  }
-}
-
-const importMIDIRef = ref<HTMLInputElement>()
-const importMIDI = () => {
-  importMIDIRef.value?.click()
-}
-
-const exportMIDI = () => {
-  const midi = new Midi()
-  const track = midi.addTrack()
-  notes.value.forEach(note => {
-    track.addNote({
-      name: note.getPitchOctave(),
-      pitch: note.pitch,
-      octave: note.octave,
-      time: Time({
-        '4n': note.start.beat
-      }).toSeconds(),
-      duration: Time({
-        '4n': note.duration
-      }).toSeconds()
-    })
-  })
-
-  const blob = new Blob([midi.toArray()], { type: 'mid' })
-  const url = URL.createObjectURL(blob)
-  const downloadLink = document.createElement('a')
-  downloadLink.setAttribute('href', url)
-  downloadLink.setAttribute('download', 'Track.mid')
-  downloadLink.click()
-  URL.revokeObjectURL(url)
-}
-
 // TODO: chord auto complete
 
 // TODO: melody auto complete
 </script>
 
 <style lang="less" scoped>
-@timeScaleHeight: 36px;
-@keyboardWidth: 88px;
+@timeScaleHeight: 32px;
+@keyboardWidth: 72px;
 
 .midi-editor {
   position: relative;

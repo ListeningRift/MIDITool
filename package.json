@@ -14,9 +14,12 @@
     "update:deps": "npm-check -u"
   },
   "dependencies": {
+    "@primevue/themes": "^4.0.0",
     "@tonejs/midi": "^2.0.28",
     "@vueuse/core": "^10.11.0",
     "pinia": "^2.1.7",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.0.0",
     "simplebar-vue": "^2.3.5",
     "tone": "^15.0.4",
     "vue": "^3.4.25"

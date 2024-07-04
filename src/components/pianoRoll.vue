@@ -308,7 +308,7 @@ const onDragLeave = (e: DragEvent) => {
 </script>
 
 <style lang="less" scoped>
-@keyboardWidth: 88px;
+@keyboardWidth: 72px;
 
 .piano-roll {
   display: flex;
