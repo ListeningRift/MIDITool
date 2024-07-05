@@ -336,11 +336,8 @@ const onDragLeave = (e: DragEvent) => {
     line-height: 24px;
     text-align: right;
     border: 1px solid @borderMedium;
+    border-top: none;
     user-select: none;
-
-    &:not(:first-child) {
-      border-top: none;
-    }
   }
 
   .keyboard {
@@ -351,7 +348,13 @@ const onDragLeave = (e: DragEvent) => {
     .pitch {
       padding-right: 4px;
       font-size: 12px;
+      border: none;
+      border-bottom: 1px solid @borderLight;
       cursor: pointer;
+
+      &:last-child {
+        border: none;
+      }
     }
 
     .pitch.white-key {
@@ -378,8 +381,6 @@ const onDragLeave = (e: DragEvent) => {
 
     .pitch {
       position: relative;
-      border-left: none;
-      border-right: none;
 
       &.white-key {
         background: @bgWhite;

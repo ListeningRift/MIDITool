@@ -1,7 +1,7 @@
 <template>
   <div class="midi-tool">
     <div class="midi-tool-header">
-      <Menubar :model="items" />
+      <menubar :model="items" />
       <input
         ref="importMIDIRef"
         type="file"
@@ -11,7 +11,12 @@
       />
     </div>
     <div class="midi-tool-body">
-      <midi-editor v-model:notes="notes"></midi-editor>
+      <div class="midi-suggestion-list">
+        <div class="no-suggestion">暂无数据</div>
+      </div>
+      <div class="midi-tool-editor">
+        <midi-editor v-model:notes="notes"></midi-editor>
+      </div>
     </div>
   </div>
 </template>
@@ -117,8 +122,29 @@ const items = ref([
   height: 100%;
 
   .midi-tool-body {
+    display: flex;
     height: 0;
     flex-grow: 1;
+
+    .midi-suggestion-list {
+      width: 160px;
+      height: 100%;
+      border-right: 1px solid @borderMedium;
+
+      .no-suggestion {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: @textDescriptive;
+      }
+    }
+
+    .midi-tool-editor {
+      width: 0;
+      flex-grow: 1;
+    }
   }
 }
 </style>
